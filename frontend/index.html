@@ -2106,45 +2106,20 @@
 
                 <!-- Page: Live Feed -->
                 <div id="live-feed" class="page">
-                    <div class="feed-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap:24px; padding-bottom:40px;">
-                        <div class="glass-card animate-in" style="border-left: 4px solid var(--red);">
-                            <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
-                                <span style="font-size:0.7rem; color:var(--red); font-weight:800; font-family:'JetBrains Mono';">CRITICAL_THREAT</span>
-                                <span style="font-size:0.7rem; color:var(--text-tertiary);">2m ago</span>
-                            </div>
-                            <h4 style="font-family:'Syne', sans-serif; margin-bottom:12px;">Coordinated bot network detected in Eastern Europe targeting election integrity.</h4>
-                            <div style="display:flex; gap:8px; margin-bottom:16px;">
-                                <span style="background:var(--bg-overlay); padding:4px 8px; border-radius:4px; font-size:0.65rem;">#election2026</span>
-                                <span style="background:var(--bg-overlay); padding:4px 8px; border-radius:4px; font-size:0.65rem;">#disinfo</span>
-                            </div>
-                            <div style="font-size:0.8rem; color:var(--text-secondary); line-height:1.5;">Cluster of 400+ accounts identified using identical semantic markers and shared IP ranges.</div>
-                        </div>
-
-                        <div class="glass-card animate-in" style="border-left: 4px solid var(--amber); animation-delay:0.1s;">
-                            <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
-                                <span style="font-size:0.7rem; color:var(--amber); font-weight:800; font-family:'JetBrains Mono';">SUSPICIOUS_ACTIVITY</span>
-                                <span style="font-size:0.7rem; color:var(--text-tertiary);">15m ago</span>
-                            </div>
-                            <h4 style="font-family:'Syne', sans-serif; margin-bottom:12px;">AI-generated deepfake of CEO circulating on professional networks.</h4>
-                            <div style="display:flex; gap:8px; margin-bottom:16px;">
-                                <span style="background:var(--bg-overlay); padding:4px 8px; border-radius:4px; font-size:0.65rem;">#deepfake</span>
-                                <span style="background:var(--bg-overlay); padding:4px 8px; border-radius:4px; font-size:0.65rem;">#corporate</span>
-                            </div>
-                            <div style="font-size:0.8rem; color:var(--text-secondary); line-height:1.5;">Synthesized voice profile shows 92% match with known generative models. High virality potential.</div>
-                        </div>
-
-                        <div class="glass-card animate-in" style="border-left: 4px solid var(--green); animation-delay:0.2s;">
-                            <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
-                                <span style="font-size:0.7rem; color:var(--green); font-weight:800; font-family:'JetBrains Mono';">CLEARED_SIGNAL</span>
-                                <span style="font-size:0.7rem; color:var(--text-tertiary);">1h ago</span>
-                            </div>
-                            <h4 style="font-family:'Syne', sans-serif; margin-bottom:12px;">Viral health claims verified by multiple trusted medical sources.</h4>
-                            <div style="display:flex; gap:8px; margin-bottom:16px;">
-                                <span style="background:var(--bg-overlay); padding:4px 8px; border-radius:4px; font-size:0.65rem;">#health</span>
-                                <span style="background:var(--bg-overlay); padding:4px 8px; border-radius:4px; font-size:0.65rem;">#verified</span>
-                            </div>
-                            <div style="font-size:0.8rem; color:var(--text-secondary); line-height:1.5;">Originating from a peer-reviewed study. Semantic stability is 98% across all major outlets.</div>
-                        </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                        <div style="font-size: 0.9rem; color: var(--text-secondary);">Real-time intelligence from global news nodes</div>
+                        <button class="btn-action ripple-target" onclick="refreshLiveNews()" style="padding: 8px 16px; font-size: 0.75rem;">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" style="margin-right: 6px;">
+                                <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                            </svg>
+                            Refresh Nodes
+                        </button>
+                    </div>
+                    <div id="news-feed-grid" class="feed-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap:24px; padding-bottom:40px;">
+                        <!-- News items will be injected here -->
+                        <div class="glass-card shimmer" style="height: 200px; border-radius: 16px;"></div>
+                        <div class="glass-card shimmer" style="height: 200px; border-radius: 16px;"></div>
+                        <div class="glass-card shimmer" style="height: 200px; border-radius: 16px;"></div>
                     </div>
                 </div>
 
@@ -2190,8 +2165,8 @@
                                             <stop offset="100%" stop-color="var(--accent-primary)" stop-opacity="0"></stop>
                                         </linearGradient>
                                     </defs>
-                                    <path class="area-path" d="M0,250 L100,220 L200,260 L300,180 L400,210 L500,140 L600,190 L700,80 L800,120 L900,60 L1000,100" />
-                                    <path class="area-fill" d="M0,250 L100,220 L200,260 L300,180 L400,210 L500,140 L600,190 L700,80 L800,120 L900,60 L1000,100 V300 H0 Z" fill="url(#area-gradient)" />
+                                    <path id="dash-area-path" class="area-path" d="M0,250 L100,220 L200,260 L300,180 L400,210 L500,140 L600,190 L700,80 L800,120 L900,60 L1000,100" />
+                                    <path id="dash-area-fill" class="area-fill" d="M0,250 L100,220 L200,260 L300,180 L400,210 L500,140 L600,190 L700,80 L800,120 L900,60 L1000,100 V300 H0 Z" fill="url(#area-gradient)" />
                                 </svg>
                             </div>
                         </div>
@@ -2200,12 +2175,12 @@
                             <div style="flex:1; display:flex; align-items:center; justify-content:center; position:relative;">
                                 <svg width="240" height="240" viewBox="0 0 240 240">
                                     <circle cx="120" cy="120" r="80" fill="none" stroke="var(--bg-overlay)" stroke-width="24"></circle>
-                                    <circle cx="120" cy="120" r="80" fill="none" stroke="var(--green)" stroke-width="24" stroke-dasharray="300 500" stroke-linecap="round" transform="rotate(-90 120 120)"></circle>
-                                    <circle cx="120" cy="120" r="80" fill="none" stroke="var(--red)" stroke-width="24" stroke-dasharray="120 500" stroke-dashoffset="-300" stroke-linecap="round" transform="rotate(-90 120 120)"></circle>
-                                    <circle cx="120" cy="120" r="80" fill="none" stroke="var(--amber)" stroke-width="24" stroke-dasharray="80 500" stroke-dashoffset="-420" stroke-linecap="round" transform="rotate(-90 120 120)"></circle>
+                                    <circle id="donut-real" cx="120" cy="120" r="80" fill="none" stroke="var(--green)" stroke-width="24" stroke-dasharray="300 500" stroke-linecap="round" transform="rotate(-90 120 120)"></circle>
+                                    <circle id="donut-fake" cx="120" cy="120" r="80" fill="none" stroke="var(--red)" stroke-width="24" stroke-dasharray="120 500" stroke-dashoffset="-300" stroke-linecap="round" transform="rotate(-90 120 120)"></circle>
+                                    <circle id="donut-suspicious" cx="120" cy="120" r="80" fill="none" stroke="var(--amber)" stroke-width="24" stroke-dasharray="80 500" stroke-dashoffset="-420" stroke-linecap="round" transform="rotate(-90 120 120)"></circle>
                                 </svg>
                                 <div style="position:absolute; text-align:center;">
-                                    <div style="font-family:'Syne', sans-serif; font-size:2rem; font-weight:800;">74.2%</div>
+                                    <div id="dash-confidence-val" style="font-family:'Syne', sans-serif; font-size:2rem; font-weight:800;">74.2%</div>
                                     <div style="font-size:0.7rem; color:var(--text-tertiary); letter-spacing:0.1em;">CONFIDENCE</div>
                                 </div>
                             </div>
@@ -2734,6 +2709,7 @@
 
             state.page = pageId;
             if (pageId === 'dashboard') initCharts();
+            if (pageId === 'live-feed') refreshLiveNews();
         }
 
         // Keyboard Shortcuts
@@ -3354,30 +3330,153 @@ CONFIDENTIAL INTEL DATA
 
         async function fetchMetrics() {
             try {
-                const res = await fetch('/metrics');
+                let apiUrl = '/metrics';
+                if (window.location.protocol === 'file:' || window.location.hostname === '') {
+                    apiUrl = 'http://127.0.0.1:8000/metrics';
+                }
+                
+                const res = await fetch(apiUrl);
                 if (!res.ok) return;
                 const data = await res.json();
                 
                 const updateEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
                 
-                updateEl('side-total-analyzed', data.total_analyzed.toLocaleString());
-                updateEl('side-fake-detected', data.fake_detected.toLocaleString());
-                updateEl('side-threats-flagged', data.threats_flagged.toLocaleString());
-                updateEl('side-accuracy', data.accuracy_rate.toFixed(1) + '%');
-
-                updateEl('dash-total-analyzed', data.total_analyzed.toLocaleString());
-                updateEl('dash-fake-detected', data.fake_detected.toLocaleString());
-                updateEl('dash-threats-flagged', data.threats_flagged.toLocaleString());
-                updateEl('dash-accuracy', data.accuracy_rate.toFixed(1) + '%');
+                // Update Main Stats
+                updateEl('dash-total-analyzed', data.stats.total);
+                updateEl('dash-fake-detected', data.stats.fake);
+                updateEl('dash-threats-flagged', data.stats.threats);
+                updateEl('dash-accuracy', data.stats.accuracy);
+                updateEl('dash-api-calls', data.stats.api_calls);
+                updateEl('api-call-count', data.stats.api_calls);
                 
-                const apiEl = document.getElementById('dash-api-calls');
-                if (apiEl) {
-                    const apiCount = document.getElementById('api-call-count');
-                    if (apiCount) apiCount.textContent = (data.total_analyzed).toLocaleString();
-                    apiEl.textContent = (data.total_analyzed).toLocaleString();
+                // Update Threat Level in Header
+                const threatEl = document.querySelector('.threat-badge') || document.querySelector('[data-page="threat-map"]'); 
+                // We'll look for the specific threat level text in the header
+                document.querySelectorAll('.dropdown-item').forEach(item => {
+                    if (item.textContent.includes('Global threat level')) {
+                        item.innerHTML = `• Global threat level: <span style="color:var(--amber)">${data.threat_level}</span>`;
+                    }
+                });
+
+                // Update Area Chart (Detection Volume)
+                const volume = data.charts.volume;
+                const pathEl = document.getElementById('dash-area-path');
+                const fillEl = document.getElementById('dash-area-fill');
+                if (pathEl && volume.length > 0) {
+                    const maxVol = Math.max(...volume, 1);
+                    const points = volume.map((v, i) => {
+                        const x = (i / (volume.length - 1)) * 1000;
+                        const y = 300 - (v / maxVol) * 200 - 50;
+                        return `${x},${y}`;
+                    }).join(' L');
+                    
+                    pathEl.setAttribute('d', 'M' + points);
+                    fillEl.setAttribute('d', `M${points} V300 H0 Z`);
                 }
+
+                // Update Donut Chart (Distribution)
+                const dist = data.charts.distribution; // [real, fake, suspicious]
+                const total = dist.reduce((a, b) => a + b, 0);
+                const circ = 2 * Math.PI * 80; // Radius 80
+                
+                const realPct = dist[0] / total;
+                const fakePct = dist[1] / total;
+                const suspPct = dist[2] / total;
+                
+                const realStroke = realPct * circ;
+                const fakeStroke = fakePct * circ;
+                const suspStroke = suspPct * circ;
+                
+                const realEl = document.getElementById('donut-real');
+                const fakeEl = document.getElementById('donut-fake');
+                const suspEl = document.getElementById('donut-suspicious');
+                
+                if (realEl) {
+                    realEl.setAttribute('stroke-dasharray', `${realStroke} ${circ}`);
+                    fakeEl.setAttribute('stroke-dasharray', `${fakeStroke} ${circ}`);
+                    fakeEl.setAttribute('stroke-dashoffset', -realStroke);
+                    suspEl.setAttribute('stroke-dasharray', `${suspStroke} ${circ}`);
+                    suspEl.setAttribute('stroke-dashoffset', -(realStroke + fakeStroke));
+                    
+                    updateEl('dash-confidence-val', (realPct * 100).toFixed(1) + '%');
+                }
+
             } catch (e) {
                 console.warn("Failed to fetch metrics", e);
+            }
+        }
+        
+        // Polling for Intelligence Dashboard
+        setInterval(fetchMetrics, 30000);
+        fetchMetrics();
+
+        async function refreshLiveNews() {
+            const grid = document.getElementById('news-feed-grid');
+            if (!grid) return;
+            
+            // Show Shimmer Skeletons
+            grid.innerHTML = `
+                <div class="glass-card shimmer" style="height: 200px; border-radius: 16px;"></div>
+                <div class="glass-card shimmer" style="height: 200px; border-radius: 16px;"></div>
+                <div class="glass-card shimmer" style="height: 200px; border-radius: 16px;"></div>
+            `;
+            
+            try {
+                let apiUrl = '/api/news';
+                if (window.location.protocol === 'file:' || window.location.hostname === '') {
+                    apiUrl = 'http://127.0.0.1:8000/api/news';
+                }
+                
+                const response = await fetch(apiUrl);
+                if (!response.ok) throw new Error("FETCH_FAILED");
+                const data = await response.json();
+                
+                if (data.news && data.news.length > 0) {
+                    grid.innerHTML = '';
+                    data.news.forEach((item, idx) => {
+                        const card = document.createElement('div');
+                        card.className = 'glass-card animate-in';
+                        
+                        // Alternate colors for aesthetic variety
+                        const colors = ['var(--accent-primary)', 'var(--accent-secondary)', 'var(--green)', 'var(--amber)'];
+                        const labels = ['VERIFIED_SIGNAL', 'LIVE_INTEL', 'CLEARED_SIGNAL', 'STABLE_NODE'];
+                        const color = colors[idx % colors.length];
+                        const label = labels[idx % labels.length];
+                        
+                        card.style = `border-left: 4px solid ${color}; animation-delay: ${idx * 0.1}s;`;
+                        card.innerHTML = `
+                            <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+                                <span style="font-size:0.7rem; color:${color}; font-weight:800; font-family:'JetBrains Mono';">${label}</span>
+                                <span style="font-size:0.7rem; color:var(--text-tertiary);">${item.date}</span>
+                            </div>
+                            <h4 style="font-family:'Syne', sans-serif; margin-bottom:12px; font-size:1.1rem; line-height:1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${item.title}</h4>
+                            <div style="display:flex; gap:8px; margin-bottom:16px;">
+                                <span style="background:var(--bg-overlay); padding:4px 8px; border-radius:4px; font-size:0.65rem; color:var(--text-secondary); border:1px solid var(--border-default);">${item.source}</span>
+                            </div>
+                            <div style="font-size:0.8rem; color:var(--text-secondary); line-height:1.5; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">${item.snippet}</div>
+                            <div style="margin-top: 20px; display: flex; gap: 12px;">
+                                <button onclick="injectToAnalyze('${item.title.replace(/'/g, "\\'")} ${item.snippet.replace(/'/g, "\\'")}')" class="btn-action primary" style="padding: 6px 12px; font-size: 0.7rem; flex:1;">Deep Analyze</button>
+                                <a href="${item.url}" target="_blank" class="btn-action" style="padding: 6px 12px; font-size: 0.7rem; text-decoration:none;">Source →</a>
+                            </div>
+                        `;
+                        grid.appendChild(card);
+                    });
+                } else {
+                    grid.innerHTML = '<div style="grid-column: span 3; text-align: center; padding: 40px; color: var(--text-tertiary);">No live news nodes currently responding. Check connection.</div>';
+                }
+            } catch (err) {
+                console.error("News refresh failed:", err);
+                grid.innerHTML = `<div style="grid-column: span 3; text-align: center; padding: 40px; color: var(--red);">Handshake failed: News cluster unreachable. (${err.message})</div>`;
+            }
+        }
+
+        function injectToAnalyze(text) {
+            showPage('analyze');
+            const textArea = document.getElementById('main-text');
+            if (textArea) {
+                textArea.value = text;
+                // Trigger auto-resize if needed or just scroll
+                textArea.focus();
             }
         }
 
