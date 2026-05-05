@@ -22,6 +22,10 @@ class Settings(BaseSettings):
     # Security
     CORS_ORIGINS: List[str] = ["*"] # Change to specific domains in real production
     
+    # Google Fact Check Tools API (free, get key from https://console.cloud.google.com/)
+    # Leave empty to disable real-time fact-checking (app still works without it)
+    GOOGLE_FACTCHECK_API_KEY: str = ""
+    
     # Heuristics
     TRUST_MARKERS: List[str] = ["according to", "reported by", "stated that", "spokesperson", "official sources", "confirmed by", "citing"]
     SENSATIONAL_MARKERS: List[str] = ["shocker", "you won't believe", "exposed!", "conspiracy", "hidden truth", "they don't want you to know"]

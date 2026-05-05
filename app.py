@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import time
 import pickle
 import numpy as np
@@ -24,6 +25,7 @@ from src.bilstm_attention import BiLSTMWithAttention
 from src.bert_hybrid import HybridBERTModel
 from src.data_loader import prepare_sequences
 from src.feature_extractor import ClassicalFeatureExtractor
+from fact_checker import check_facts
 
 # Configure Logging
 logging.basicConfig(
@@ -38,6 +40,7 @@ logger = logging.getLogger("TruthLens")
 
 # Global resources
 resources = {}
+_prediction_history = []
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -54,18 +57,28 @@ async def lifespan(app: FastAPI):
         bilstm.eval()
         resources["bilstm_model"] = bilstm
         
-        # Load BERT
-        bert = HybridBERTModel(107, mode='hybrid')
+        # Load Classical Extractor
+        extractor = ClassicalFeatureExtractor(max_tfidf_features=100)
+        extractor.load(settings.TFIDF_MODEL_PATH)
+        resources["classical_extractor"] = extractor
+        
+        # Calculate actual classical dimension: TF-IDF features + 3 POS + 4 Sentiment
+        classical_dim = extractor.tfidf.get_feature_names_out().shape[0] + 7
+        logger.info(f"Loaded Classical Extractor with dim: {classical_dim}")
+        
+        # Load BERT with detected dimension
+        bert = HybridBERTModel(classical_dim, mode='hybrid')
         bert.load_state_dict(torch.load(settings.BERT_MODEL_PATH, map_location='cpu'))
         bert.eval()
         resources["bert_model"] = bert
         
         resources["bert_tokenizer"] = BertTokenizer.from_pretrained('bert-base-uncased')
         
-        # Load Classical Extractor
-        extractor = ClassicalFeatureExtractor(max_tfidf_features=100)
-        extractor.load(settings.TFIDF_MODEL_PATH)
-        resources["classical_extractor"] = extractor
+        # Download NLTK resources
+        logger.info("Downloading NLTK resources...")
+        nltk.download('punkt', quiet=True)
+        nltk.download('stopwords', quiet=True)
+        nltk.download('vader_lexicon', quiet=True)
         
         logger.info("All models and vectorizers loaded successfully.")
     except Exception as e:
@@ -136,19 +149,31 @@ def compute_heuristic_score(content: str) -> dict:
     details["sensationalism"] = sensational_count
     
     # --- 2. Trust / attribution markers (strong real signal) ---
-    trust_phrases = [
-        "according to", "reported by", "stated that", "spokesperson",
-        "official sources", "confirmed by", "citing", "peer-reviewed",
-        "published in", "research shows", "data indicates", "study finds",
-        "the associated press", "reuters", "said in a statement",
-        "press release", "university of", "department of",
-        "in a report", "evidence suggests", "analysis shows",
+    trust_patterns = [
+        r"according to", r"reported by", r"official source",
+        r"verified", r"confirmed by", r"spokesperson",
+        r"data shows", r"scientific study", r"press release",
+        r"associated press", r"reuters", r"bbc news", r"the hindu", 
+        r"times of india", r"indian express", r"bloomberg", r"cnn", r"ndtv",
+        r"\(ap\)", r"\(reuters\)", r"\[reuters\]", r"\[ap\]"
     ]
-    trust_count = sum(1 for p in trust_phrases if p in content_lower)
-    if trust_count > 0:
-        real_signals += min(trust_count * 0.12, 0.5)
-        signal_count += 1
+    trust_count = 0
+    for p in trust_patterns:
+        if re.search(p, content_lower):
+            trust_count += 1
+            real_signals += 0.15  # Increased from 0.1
+    
     details["trust_markers"] = trust_count
+
+    # --- 3b. Dateline Detection (Strong Real Signal) ---
+    # Patterns like "NEW DELHI (AP) —" or "LONDON, May 5 (Reuters) -"
+    dateline_pattern = r"^[A-Z\s]{3,20}(?:,\s[A-Z][a-z]{2,8}\s\d{1,2})?\s\([A-Z\s]{2,10}\)\s[—\-]"
+    if re.search(dateline_pattern, content):
+        real_signals += 0.3
+        signal_count += 1
+        details["dateline_detected"] = True
+    else:
+        details["dateline_detected"] = False
     
     # --- 3. Exclamation / all-caps density (fake signal) ---
     exclamation_ratio = content.count('!') / max(word_count, 1)
@@ -209,6 +234,34 @@ def compute_heuristic_score(content: str) -> dict:
         fake_signals += min(absolute_count * 0.1, 0.3)
         signal_count += 1
     
+    # --- 9. Viral forwarding language (WhatsApp/social media misinformation) ---
+    viral_phrases = [
+        "forward this", "share this before", "send to everyone",
+        "whatsapp", "please share", "going viral", "must read",
+        "copy paste", "spread the word", "don't ignore this",
+        "forwarded as received", "received from reliable source",
+        "send to all groups", "breaking news forward",
+    ]
+    viral_count = sum(1 for v in viral_phrases if v in content_lower)
+    if viral_count > 0:
+        fake_signals += min(viral_count * 0.2, 0.4)
+        signal_count += 1
+    details["viral_forwarding"] = viral_count
+    
+    # --- 10. Wire service / professional journalism patterns (strong real) ---
+    wire_patterns = [
+        r"\(pti\)", r"\(ani\)", r"\(ians\)", r"\(afp\)",  # Indian & intl wire services
+        r"\(efe\)", r"\(dpa\)", r"\(xinhua\)",              # International agencies
+        r"staff reporter", r"special correspondent", 
+        r"with inputs from", r"edited by",
+        r"updated:?\s+\w+\s+\d{1,2}", r"published:?\s+\w+\s+\d{1,2}",
+    ]
+    wire_count = sum(1 for p in wire_patterns if re.search(p, content_lower))
+    if wire_count > 0:
+        real_signals += min(wire_count * 0.12, 0.35)
+        signal_count += 1
+    details["wire_service_markers"] = wire_count
+    
     # Compute final heuristic score: 0.0 = very real, 1.0 = very fake
     if signal_count == 0:
         heuristic_prob = 0.45  # neutral when no signals
@@ -224,12 +277,16 @@ def compute_heuristic_score(content: str) -> dict:
     return {"score": heuristic_prob, "details": details}
 
 
-def detect_model_calibration() -> float:
+def detect_model_calibration(heuristic_prob, trust_count) -> float:
     """
-    Returns a confidence weight for ML models. 
-    A fixed high trust is used since the models are pre-trained and highly accurate.
+    Returns a confidence weight for ML models.
+    If heuristics are very strong (trust markers found), we reduce ML trust 
+    to prevent false positives from untrained/dummy models.
     """
-    return 0.85  # Trust the neural models 85%, leaving 15% for heuristic tuning
+    base_trust = 0.85
+    if trust_count > 0 and heuristic_prob < 0.3:
+        return 0.15 # Favor heuristics for high-integrity content
+    return base_trust
 
 
 @app.post("/predict")
@@ -288,7 +345,7 @@ async def predict(data: NewsInput):
         raw_model_prob = (prob_bert * 0.6) + (prob_bilstm * 0.4)
         _prediction_history.append(raw_model_prob)
         
-        model_trust = detect_model_calibration()
+        model_trust = detect_model_calibration(heuristic_prob, trust_count)
         
         # --- Bias Mitigation Layer ---
         # The ML models were trained on political news and may exhibit Entity Bias 
@@ -300,6 +357,88 @@ async def predict(data: NewsInput):
             
         final_prob = (raw_model_prob * model_trust) + (heuristic_prob * (1 - model_trust))
         
+        # 4b. Real-Time Fact-Check Layer (Google Fact Check Tools API)
+        fact_check_result = check_facts(content, api_key=settings.GOOGLE_FACTCHECK_API_KEY)
+        
+        # Integrate fact-check signal into final probability
+        if fact_check_result.get("found") and fact_check_result.get("credibility_signal", 0) != 0:
+            fc_signal = fact_check_result["credibility_signal"]
+            # fc_signal: positive = fake, negative = real (matches our prob scale)
+            # Weight: 0.3 when fact-checks found (strong external evidence)
+            fc_weight = 0.3
+            final_prob = (final_prob * (1 - fc_weight)) + ((0.5 + fc_signal * 0.5) * fc_weight)
+            final_prob = max(0.02, min(0.98, final_prob))
+            logger.info(f"Fact-check adjusted final_prob by signal={fc_signal}")
+        
+        # 5. Professional Bullet-Point Summarizer (Advanced Extraction)
+        try:
+            from nltk.corpus import stopwords
+            from nltk.probability import FreqDist
+            from nltk.tokenize import sent_tokenize as _sent_tokenize
+            
+            # Simple extractive summarizer using word frequency
+            # Combine title and text for frequency but score sentences from text
+            full_text_lower = (data.title + " " + cleaned_text).lower()
+            words = [t for t in word_tokenize(full_text_lower) if t.isalnum()]
+            stop_words = set(stopwords.words('english'))
+            
+            freq_table = FreqDist(word for word in words if word not in stop_words)
+            
+            sentences = _sent_tokenize(cleaned_text)
+            sentence_scores = {}
+            
+            for i, sent in enumerate(sentences):
+                sent_words = [t for t in word_tokenize(sent.lower()) if t.isalnum()]
+                if len(sent_words) < 7: continue # Skip very short sentences
+                
+                score = 0
+                for word in sent_words:
+                    if word in freq_table:
+                        score += freq_table[word]
+                
+                # Normalize by length to avoid bias towards long sentences
+                score = score / (len(sent_words) ** 0.6) 
+                
+                # Boost if it's near the beginning (lead-in sentences)
+                if i < 3: score *= 1.2 
+                
+                sentence_scores[sent] = score
+            
+            # Pick top 3 sentences (reduced from 5 for conciseness)
+            import heapq
+            top_sentences_raw = heapq.nlargest(3, sentence_scores, key=sentence_scores.get)
+            
+            # Sort top sentences back to their original order for narrative flow
+            original_order = {s: idx for idx, s in enumerate(sentences)}
+            top_sentences_raw.sort(key=lambda x: original_order.get(x, 999))
+            
+            # Truncate each sentence to keep it short (User request: summarised and shorter)
+            top_sentences = []
+            for s in top_sentences_raw:
+                s = s.strip()
+                if len(s) > 160:
+                    s = s[:157] + "..."
+                top_sentences.append(s)
+            
+        except Exception as e:
+            logger.warning(f"Advanced summarizer failed: {e}. Falling back to position scoring.")
+            import re
+            all_sentences = re.split(r'(?<=[.!?]) +', cleaned_text)
+            scored_sentences = []
+            for i, s in enumerate(all_sentences):
+                if len(s.split()) < 5: continue 
+                score = 100 - (i * 5) + min(len(s.split()), 30)
+                scored_sentences.append((score, s.strip()))
+            scored_sentences.sort(key=lambda x: x[0], reverse=True)
+            top_sentences = [s[:157] + "..." if len(s) > 160 else s for s in [s for _, s in scored_sentences[:3]]]
+        
+        # 6. Extract Linguistic DNA
+        dna = {
+            "subjectivity": round(heuristic_result["details"]["sensationalism"] * 0.8, 2),
+            "emotional_charge": round(heuristic_result["details"]["fake_signals"] * 1.5, 2),
+            "fact_density": round(heuristic_result["details"]["trust_markers"] * 0.4, 2)
+        }
+
         return {
             "bilstm_prob": prob_bilstm,
             "bert_prob": prob_bert,
@@ -307,11 +446,21 @@ async def predict(data: NewsInput):
             "tokens": clean_tokens[:200],
             "attention_weights": [round(w, 4) for w in weights[:200]],
             "heuristics": heuristic_result["details"],
+            "summary_bullets": top_sentences,
+            "linguistic_dna": dna,
+            "fact_check": {
+                "enabled": fact_check_result.get("enabled", False),
+                "found": fact_check_result.get("found", False),
+                "summary": fact_check_result.get("summary", ""),
+                "matches": fact_check_result.get("matches", []),
+                "credibility_signal": fact_check_result.get("credibility_signal", 0),
+                "claims_searched": fact_check_result.get("claims_searched", [])
+            },
             "meta": {
                 "execution_time": time.time() - start_time,
                 "model_trust": model_trust,
                 "heuristic_score": heuristic_prob,
-                "version": "2.0.0-calibrated"
+                "version": "3.0.0-factcheck"
             }
         }
     except Exception as e:

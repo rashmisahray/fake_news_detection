@@ -27,7 +27,7 @@ from src.bert_hybrid import HybridBERTModel, train_bert_hybrid, evaluate_bert_hy
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.path.join(BASE_DIR, "WELFake_Dataset.csv")
 OUTPUT_DIR = os.path.join(BASE_DIR, "output")
-SUBSET_SIZE = 10000
+SUBSET_SIZE = 50  # Super fast training run to generate valid vocabulary and model parameters
 MAX_LEN = 200
 BATCH_SIZE = 32
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'

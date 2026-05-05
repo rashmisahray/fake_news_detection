@@ -1,0 +1,18 @@
+TruthLens AI — Full Experiment Results
+========================================================================
+
+DL OBJECTIVE — BiLSTM Comparison
+--------------------------------------------------
+  BiLSTM + Attention: Acc=0.6000, AUC=0.9167
+  BiLSTM (No Attention): Acc=0.6000, AUC=0.7500
+
+NLP OBJECTIVE — BERT Hybrid Comparison (F1 Scores)
+--------------------------------------------------
+  Hybrid: F1=0.2857
+  BERT Alone: F1=0.0000
+  Classical Alone: F1=0.0000
+
+Error Analysis: 5 misclassified examples
+  Mixed Content: 3
+  Sensationalist Real News: 1
+  Extreme Sentiment: 1
