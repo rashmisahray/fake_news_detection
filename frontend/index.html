@@ -1342,84 +1342,117 @@
         DASHBOARD PAGE
         ========================================
         */
-        .metrics-row {
+        /* 
+        ========================================
+        NEURAL LAB (UPGRADED DASHBOARD)
+        ========================================
+        */
+        .lab-layout {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 20px;
-            margin-bottom: 32px;
+            grid-template-columns: 280px 1fr 340px;
+            gap: 24px;
+            height: calc(100vh - 200px);
         }
 
-        .metric-card {
-            background: var(--bg-surface);
+        .lab-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .lab-main {
+            background: rgba(10, 12, 18, 0.5);
             border: 1px solid var(--border-default);
-            padding: 24px;
             border-radius: var(--radius-lg);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
         }
 
-        .m-val {
-            font-family: 'Syne', sans-serif;
-            font-size: 2rem;
-            font-weight: 800;
-            display: block;
-            margin-bottom: 8px;
+        .lab-main::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center, var(--accent-glow) 0%, transparent 70%);
+            opacity: 0.3;
         }
 
-        .m-label {
+        .radar-svg {
+            width: 80%;
+            height: 80%;
+            filter: drop-shadow(0 0 20px var(--accent-glow));
+        }
+
+        .radar-grid {
+            fill: none;
+            stroke: var(--border-strong);
+            stroke-width: 1;
+        }
+
+        .radar-axis {
+            stroke: var(--border-default);
+            stroke-width: 1;
+        }
+
+        .radar-area {
+            fill: var(--accent-primary);
+            fill-opacity: 0.2;
+            stroke: var(--accent-primary);
+            stroke-width: 3;
+            transition: all 0.8s var(--spring);
+        }
+
+        .lab-terminal {
+            background: #05070A;
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-lg);
+            display: flex;
+            flex-direction: column;
+            font-family: 'JetBrains Mono', monospace;
+            overflow: hidden;
+        }
+
+        .term-header {
+            padding: 12px 16px;
+            background: var(--bg-overlay);
             font-size: 0.7rem;
             color: var(--text-tertiary);
             text-transform: uppercase;
             letter-spacing: 0.1em;
-            font-weight: 800;
-        }
-
-        .chart-row {
-            display: grid;
-            grid-template-columns: 1.5fr 1fr;
-            gap: 24px;
-            margin-bottom: 24px;
-        }
-
-        .chart-card {
-            background: var(--bg-surface);
-            border: 1px solid var(--border-default);
-            padding: 32px;
-            border-radius: var(--radius-lg);
-            height: 420px;
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-default);
         }
 
-        .c-header {
-            font-family: 'Syne', sans-serif;
-            font-size: 1.1rem;
-            font-weight: 800;
-            margin-bottom: 24px;
-        }
-
-        /* Area Chart */
-        .area-wrap {
+        .term-body {
             flex: 1;
-            position: relative;
-            margin-top: 20px;
+            padding: 16px;
+            font-size: 0.8rem;
+            color: var(--accent-primary);
+            line-height: 1.6;
+            overflow-y: auto;
         }
 
-        .area-svg {
-            width: 100%;
-            height: 100%;
-            overflow: visible;
+        .term-line {
+            margin-bottom: 8px;
+            opacity: 0;
+            transform: translateX(-10px);
+            animation: termIn 0.4s forwards;
         }
 
-        .area-path {
-            fill: none;
-            stroke: var(--accent-primary);
-            stroke-width: 3;
-            stroke-linecap: round;
-            stroke-linejoin: round;
+        @keyframes termIn {
+            to { opacity: 1; transform: translateX(0); }
         }
 
-        .area-fill {
-            fill: url(#area-gradient);
-            opacity: 0.1;
+        .dna-label {
+            position: absolute;
+            font-size: 0.65rem;
+            color: var(--text-tertiary);
+            font-weight: 800;
+            text-transform: uppercase;
         }
 
         /* 
@@ -2042,6 +2075,10 @@
                                         </svg>
                                         New Analysis
                                     </button>
+                                    <button class="btn-action ripple-target" onclick="showPage('dashboard')" style="border-color:var(--accent-primary); color:var(--accent-primary);">
+                                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.21 15.89A10 10 0 1 1 8 2.83M22 12A10 10 0 0 0 12 2v10z"/></svg>
+                                        View DNA Lab
+                                    </button>
                                     <button class="btn-action ripple-target" onclick="downloadReport()">
                                         <svg viewBox="0 0 24 24" width="18" height="18" fill="none"
                                             stroke="currentColor" stroke-width="2.5">
@@ -2123,71 +2160,86 @@
                     </div>
                 </div>
 
-                <!-- Page: Dashboard -->
+                <!-- Page: Neural Lab (Interactive Dashboard) -->
                 <div id="dashboard" class="page">
-                    <div class="metrics-row">
-                        <div class="metric-card">
-                            <span class="m-val" id="dash-total-analyzed" data-v="12480">12,480</span>
-                            <span class="m-label">Total Analyzed</span>
+                    <div class="lab-layout">
+                        <!-- Left Stats -->
+                        <div class="lab-sidebar">
+                            <div class="metric-card" style="flex:1;">
+                                <span class="m-label">Network Load</span>
+                                <span class="m-val" id="dash-total-analyzed">0</span>
+                                <div class="i-bar-track" style="margin-top:12px;"><div class="i-bar-fill" style="width:70%; background:var(--accent-primary);"></div></div>
+                            </div>
+                            <div class="metric-card" style="flex:1;">
+                                <span class="m-label">Threats Quashed</span>
+                                <span class="m-val" id="dash-fake-detected" style="color:var(--red)">0</span>
+                                <div class="i-bar-track" style="margin-top:12px;"><div class="i-bar-fill" style="width:40%; background:var(--red);"></div></div>
+                            </div>
+                            <div class="metric-card" style="flex:1;">
+                                <span class="m-label">Precision Rate</span>
+                                <span class="m-val" id="dash-accuracy" style="color:var(--green)">0%</span>
+                                <div class="i-bar-track" style="margin-top:12px;"><div class="i-bar-fill" style="width:98%; background:var(--green);"></div></div>
+                            </div>
+                            <div class="metric-card" style="background:var(--accent-primary); border:none; color:white;">
+                                <span class="m-label" style="color:rgba(255,255,255,0.7)">Session Intel</span>
+                                <span class="m-val" id="dash-api-calls" style="font-size:1.5rem">0</span>
+                            </div>
                         </div>
-                        <div class="metric-card">
-                            <span class="m-val" id="dash-fake-detected" data-v="3842" style="color:var(--red)">3,842</span>
-                            <span class="m-label">Fake Detected</span>
-                        </div>
-                        <div class="metric-card">
-                            <span class="m-val" id="dash-threats-flagged" data-v="842" style="color:var(--amber)">842</span>
-                            <span class="m-label">Threats Flagged</span>
-                        </div>
-                        <div class="metric-card">
-                            <span class="m-val" id="dash-accuracy" data-v="98.4" style="color:var(--green)">98.4%</span>
-                            <span class="m-label">Accuracy Rate</span>
-                        </div>
-                        <div class="metric-card">
-                            <span class="m-val" id="dash-api-calls" data-v="847">847</span>
-                            <span class="m-label">API Calls Today</span>
-                        </div>
-                    </div>
 
-                    <div class="chart-row">
-                        <div class="chart-card glass-card">
-                            <div class="c-header" style="display:flex; justify-content:space-between; align-items:center;">
-                                Detection Volume (30d)
-                                <div style="display:flex; gap:8px;">
-                                    <div style="width:8px; height:8px; background:var(--accent-primary); border-radius:50%;"></div>
-                                    <div style="font-size:0.7rem; color:var(--text-tertiary);">LIVE_DATA</div>
-                                </div>
+                        <!-- Center Radar -->
+                        <div class="lab-main">
+                            <div class="c-header" style="position:absolute; top:32px; left:32px; margin:0;">
+                                Linguistic DNA Fingerprint
+                                <div style="font-size:0.65rem; color:var(--text-tertiary); font-weight:400; margin-top:4px;">NEURAL VECTOR MAPPING v4.2</div>
                             </div>
-                            <div class="area-wrap">
-                                <svg class="area-svg" viewBox="0 0 1000 300" preserveAspectRatio="none">
-                                    <defs>
-                                        <linearGradient id="area-gradient" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="0%" stop-color="var(--accent-primary)" stop-opacity="0.4"></stop>
-                                            <stop offset="100%" stop-color="var(--accent-primary)" stop-opacity="0"></stop>
-                                        </linearGradient>
-                                    </defs>
-                                    <path id="dash-area-path" class="area-path" d="M0,250 L100,220 L200,260 L300,180 L400,210 L500,140 L600,190 L700,80 L800,120 L900,60 L1000,100" />
-                                    <path id="dash-area-fill" class="area-fill" d="M0,250 L100,220 L200,260 L300,180 L400,210 L500,140 L600,190 L700,80 L800,120 L900,60 L1000,100 V300 H0 Z" fill="url(#area-gradient)" />
-                                </svg>
+                            
+                            <div style="position:absolute; top:32px; right:32px; text-align:right;">
+                                <div id="lab-verdict-label" style="font-family:'Syne', sans-serif; font-size:1.5rem; font-weight:800; color:var(--green);">CLEARED</div>
+                                <div id="lab-confidence-val" style="font-size:0.8rem; color:var(--text-tertiary);">94.2% CONFIDENCE</div>
                             </div>
+
+                            <svg class="radar-svg" viewBox="0 0 400 400">
+                                <!-- Grid -->
+                                <circle class="radar-grid" cx="200" cy="200" r="40" />
+                                <circle class="radar-grid" cx="200" cy="200" r="80" />
+                                <circle class="radar-grid" cx="200" cy="200" r="120" />
+                                <circle class="radar-grid" cx="200" cy="200" r="160" />
+                                
+                                <!-- Axes -->
+                                <line class="radar-axis" x1="200" y1="40" x2="200" y2="360" />
+                                <line class="radar-axis" x1="40" y1="200" x2="360" y2="200" />
+                                <line class="radar-axis" x1="87" y1="87" x2="313" y2="313" />
+                                <line class="radar-axis" x1="87" y1="313" x2="313" y2="87" />
+
+                                <!-- DNA Area -->
+                                <polygon id="lab-radar-poly" class="radar-area" points="200,100 280,150 250,280 150,280 120,150" />
+                            </svg>
+
+                            <!-- Labels -->
+                            <div class="dna-label" style="top:20px; left:50%; transform:translateX(-50%)">Complexity</div>
+                            <div class="dna-label" style="top:25%; right:10%">Emotion</div>
+                            <div class="dna-label" style="bottom:5%; right:25%">Fact Density</div>
+                            <div class="dna-label" style="bottom:5%; left:25%">Diversity</div>
+                            <div class="dna-label" style="top:25%; left:10%">Logic</div>
                         </div>
-                        <div class="chart-card glass-card">
-                            <div class="c-header">Verdict Distribution</div>
-                            <div style="flex:1; display:flex; align-items:center; justify-content:center; position:relative;">
-                                <svg width="240" height="240" viewBox="0 0 240 240">
-                                    <circle cx="120" cy="120" r="80" fill="none" stroke="var(--bg-overlay)" stroke-width="24"></circle>
-                                    <circle id="donut-real" cx="120" cy="120" r="80" fill="none" stroke="var(--green)" stroke-width="24" stroke-dasharray="300 500" stroke-linecap="round" transform="rotate(-90 120 120)"></circle>
-                                    <circle id="donut-fake" cx="120" cy="120" r="80" fill="none" stroke="var(--red)" stroke-width="24" stroke-dasharray="120 500" stroke-dashoffset="-300" stroke-linecap="round" transform="rotate(-90 120 120)"></circle>
-                                    <circle id="donut-suspicious" cx="120" cy="120" r="80" fill="none" stroke="var(--amber)" stroke-width="24" stroke-dasharray="80 500" stroke-dashoffset="-420" stroke-linecap="round" transform="rotate(-90 120 120)"></circle>
-                                </svg>
-                                <div style="position:absolute; text-align:center;">
-                                    <div id="dash-confidence-val" style="font-family:'Syne', sans-serif; font-size:2rem; font-weight:800;">74.2%</div>
-                                    <div style="font-size:0.7rem; color:var(--text-tertiary); letter-spacing:0.1em;">CONFIDENCE</div>
-                                </div>
+
+                        <!-- Right Terminal -->
+                        <div class="lab-terminal">
+                            <div class="term-header">
+                                <span>Neural Activity Log</span>
+                                <span id="term-status">ACTIVE</span>
                             </div>
-                            <div style="display:flex; justify-content:space-around; font-size:0.8rem; color:var(--text-secondary); margin-top:16px;">
-                                <div style="display:flex; align-items:center; gap:8px;"><div style="width:10px; height:10px; background:var(--green); border-radius:2px;"></div> Real</div>
-                                <div style="display:flex; align-items:center; gap:8px;"><div style="width:10px; height:10px; background:var(--red); border-radius:2px;"></div> Fake</div>
-                                <div style="display:flex; align-items:center; gap:8px;"><div style="width:10px; height:10px; background:var(--amber); border-radius:2px;"></div> Suspicious</div>
+                            <div id="lab-term-body" class="term-body">
+                                <div class="term-line">> Initializing Neural Forensics...</div>
+                                <div class="term-line">> Waiting for analysis input...</div>
+                            </div>
+                            <div style="padding:16px; border-top:1px solid var(--border-default);">
+                                <div class="c-header" style="font-size:0.8rem; margin-bottom:12px;">Pulse Volume</div>
+                                <div style="height:60px;">
+                                    <svg viewBox="0 0 1000 300" preserveAspectRatio="none" style="width:100%; height:100%;">
+                                        <path id="dash-area-path" class="area-path" d="M0,250 L100,220 L200,260 L300,180 L400,210 L500,140 L600,190 L700,80 L800,120 L900,60 L1000,100" />
+                                    </svg>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -2799,6 +2851,30 @@
             });
         }
 
+        function showNeuralToast() {
+            const toast = document.createElement('div');
+            toast.className = 'glass-card';
+            toast.style = `
+                position: fixed;
+                bottom: 32px;
+                right: 32px;
+                width: 320px;
+                padding: 24px;
+                z-index: 10000;
+                border-left: 4px solid var(--accent-primary);
+                box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+                animation: cardCascade 0.5s var(--spring) forwards;
+                pointer-events: all;
+            `;
+            toast.innerHTML = `
+                <div style="font-size:0.7rem; color:var(--accent-primary); font-weight:800; margin-bottom:8px; letter-spacing:0.1em;">NEURAL_DNA_MAPPED</div>
+                <div style="font-size:0.9rem; color:var(--text-primary); margin-bottom:16px; line-height:1.5;">Forensic profile generated for current analysis. Detailed linguistic vectors are available.</div>
+                <button onclick="showPage('dashboard'); this.parentElement.remove();" class="btn-action primary" style="width:100%; font-size:0.75rem; padding:10px;">Open DNA Lab →</button>
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => { if(toast.parentElement) toast.remove(); }, 8000);
+        }
+
         /* 
         ========================================
         ANALYSIS PIPELINE ENGINE
@@ -2999,6 +3075,11 @@
                 emoBar.style.width = '42%';
                 emoBar.parentElement.previousElementSibling.querySelector('span').textContent = '42%';
             }
+
+            // Trigger Neural Lab Toast
+            setTimeout(showNeuralToast, 1200);
+            // Refresh metrics
+            fetchMetrics();
         }
 
         function displayRealResults(data, originalText, latency = 3840) {
@@ -3199,6 +3280,11 @@
                 el.innerHTML = `<div class="pulse-dot"></div> ${tag.t}`;
                 tBox.appendChild(el);
             });
+
+            // Trigger Neural Lab Toast
+            setTimeout(showNeuralToast, 1500);
+            // Refresh metrics
+            fetchMetrics();
         }
 
         function downloadReport() {
@@ -3374,31 +3460,41 @@ CONFIDENTIAL INTEL DATA
                     fillEl.setAttribute('d', `M${points} V300 H0 Z`);
                 }
 
-                // Update Donut Chart (Distribution)
-                const dist = data.charts.distribution; // [real, fake, suspicious]
-                const total = dist.reduce((a, b) => a + b, 0);
-                const circ = 2 * Math.PI * 80; // Radius 80
-                
-                const realPct = dist[0] / total;
-                const fakePct = dist[1] / total;
-                const suspPct = dist[2] / total;
-                
-                const realStroke = realPct * circ;
-                const fakeStroke = fakePct * circ;
-                const suspStroke = suspPct * circ;
-                
-                const realEl = document.getElementById('donut-real');
-                const fakeEl = document.getElementById('donut-fake');
-                const suspEl = document.getElementById('donut-suspicious');
-                
-                if (realEl) {
-                    realEl.setAttribute('stroke-dasharray', `${realStroke} ${circ}`);
-                    fakeEl.setAttribute('stroke-dasharray', `${fakeStroke} ${circ}`);
-                    fakeEl.setAttribute('stroke-dashoffset', -realStroke);
-                    suspEl.setAttribute('stroke-dasharray', `${suspStroke} ${circ}`);
-                    suspEl.setAttribute('stroke-dashoffset', -(realStroke + fakeStroke));
-                    
-                    updateEl('dash-confidence-val', (realPct * 100).toFixed(1) + '%');
+                // Update Neural Lab Radar
+                const dna = data.latest.dna; // [Complexity, Emotion, Fact Density, Diversity, Logic]
+                const poly = document.getElementById('lab-radar-poly');
+                if (poly && dna) {
+                    const center = 200;
+                    const scale = 160;
+                    const angles = [0, 72, 144, 216, 288].map(a => (a - 90) * Math.PI / 180);
+                    const points = dna.map((val, i) => {
+                        const r = val * scale;
+                        const x = center + r * Math.cos(angles[i]);
+                        const y = center + r * Math.sin(angles[i]);
+                        return `${x},${y}`;
+                    }).join(' ');
+                    poly.setAttribute('points', points);
+                }
+
+                // Update Lab Labels
+                updateEl('lab-verdict-label', data.latest.label);
+                const verdictEl = document.getElementById('lab-verdict-label');
+                if (verdictEl) {
+                    verdictEl.style.color = data.latest.label === 'REAL' ? 'var(--green)' : (data.latest.label === 'FAKE' ? 'var(--red)' : 'var(--amber)');
+                }
+                updateEl('lab-confidence-val', data.latest.confidence + '% CONFIDENCE');
+
+                // Update Terminal
+                const termBody = document.getElementById('lab-term-body');
+                if (termBody && data.latest.logs) {
+                    termBody.innerHTML = '';
+                    data.latest.logs.forEach((log, i) => {
+                        const line = document.createElement('div');
+                        line.className = 'term-line';
+                        line.style.animationDelay = (i * 0.2) + 's';
+                        line.textContent = `> ${log}`;
+                        termBody.appendChild(line);
+                    });
                 }
 
             } catch (e) {

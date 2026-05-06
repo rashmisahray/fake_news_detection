@@ -46,7 +46,13 @@ session_stats = {
     "fake_detected": 3842,
     "threats_flagged": 842,
     "api_calls": 847,
-    "recent_history": [12, 15, 18, 14, 22, 19, 25, 28, 32, 30] # Last 10 days volume
+    "recent_history": [12, 15, 18, 14, 22, 19, 25, 28, 32, 30], # Last 10 days volume
+    "latest_analysis": {
+        "label": "REAL",
+        "confidence": 94.2,
+        "dna": [0.8, 0.2, 0.9, 0.7, 0.85], # Complexity, Emotion, Fact Density, Diversity, Logic
+        "logs": ["Neural kernel loaded", "Linguistic DNA extraction complete", "Pattern matching verified"]
+    }
 }
 _prediction_history = []
 
@@ -480,6 +486,26 @@ async def predict(data: NewsInput):
             if final_prob > 0.9:
                 session_stats["threats_flagged"] += 1
         
+        # Update latest analysis for the "Neural Lab"
+        session_stats["latest_analysis"] = {
+            "label": "FAKE" if final_prob > 0.7 else ("SUSPICIOUS" if final_prob > 0.4 else "REAL"),
+            "confidence": round(float(final_prob if final_prob > 0.5 else 1-final_prob) * 100, 1),
+            "dna": [
+                features.get("complexity", 0.5),
+                features.get("sentiment", 0.5),
+                heuristic_result["details"]["trust_markers"] / 10,
+                features.get("lexical_diversity", 0.5),
+                1.0 - (final_prob if final_prob > 0.5 else 0.5) # Logic score
+            ],
+            "logs": [
+                f"Input length: {len(text)} chars",
+                f"BERT analysis confidence: {round(prob_bert*100, 1)}%",
+                f"BiLSTM temporal matching: {round(prob_bilstm*100, 1)}%",
+                f"Linguistic consistency: {round(features.get('lexical_diversity', 0)*100, 1)}%",
+                f"Final verdict: {session_stats['latest_analysis']['label']}"
+            ]
+        }
+
         # Add to history for charts
         _prediction_history.append({
             "timestamp": time.time(),
@@ -548,8 +574,9 @@ async def get_metrics():
             "api_calls": f"{session_stats['api_calls']:,}"
         },
         "threat_level": threat_level,
+        "latest": session_stats["latest_analysis"],
         "charts": {
-            "volume": session_stats["recent_history"] + [len([p for p in _prediction_history if time.time() - p['timestamp'] < 3600])],
+            "volume": session_stats["recent_history"] + [len([p for p in _prediction_history if isinstance(p, dict) and time.time() - p.get('timestamp', 0) < 3600])],
             "distribution": [real_count, fake_count, suspicious_count]
         }
     }
