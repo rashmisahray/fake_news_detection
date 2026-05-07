@@ -63,10 +63,41 @@ import requests
 import xml.etree.ElementTree as ET
 from datetime import datetime
 
+def search_related_news(query: str, max_results: int = 6) -> list:
+    """
+    Search for news related to a specific query using DuckDuckGo.
+    """
+    if not query or query == "world news":
+        return get_latest_news(max_results=max_results)
+        
+    try:
+        results = DDGS().news(query, max_results=max_results)
+        news_list = []
+        
+        for r in results:
+            news_list.append({
+                "title": r.get("title", "No Title"),
+                "source": r.get("source", "Web Search"),
+                "url": r.get("url", "#"),
+                "date": r.get("date", "Recent"),
+                "snippet": r.get("body", "Related intelligence found in global news nodes.")
+            })
+            
+        if not news_list:
+            return get_latest_news(max_results=max_results)
+            
+        return news_list
+    except Exception as e:
+        logger.error(f"DuckDuckGo news search failed: {e}")
+        return get_latest_news(max_results=max_results)
+
 def get_latest_news(query: str = "world news", max_results: int = 15) -> list:
     """
     Fetch the latest news from Global and India RSS Feeds.
+    If a specific query is provided, use search_related_news instead.
     """
+    if query and query != "world news":
+        return search_related_news(query, max_results=max_results)
     feeds = [
         {"url": "https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en", "label": "GLOBAL"},
         {"url": "https://news.google.com/rss?hl=en-IN&gl=IN&ceid=IN:en", "label": "INDIA"}
