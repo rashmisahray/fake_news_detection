@@ -2168,11 +2168,36 @@
 
                         <!-- Right Col -->
                         <div class="side-panel">
+                            <!-- DNA Radar Chart (The Intelligence Part) -->
+                            <div class="glass-card" style="padding: 16px; border-radius: 16px; margin-bottom: 20px; position: relative; height: 260px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid var(--border-default);">
+                                <div style="position: absolute; top: 12px; left: 16px; font-size: 0.65rem; font-weight: 800; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.05em;">Neural DNA Profile</div>
+                                <svg id="analyze-radar-svg" viewBox="0 0 400 400" style="width: 220px; height: 220px; transform: rotate(-18deg);">
+                                    <!-- Grid Lines -->
+                                    <circle cx="200" cy="200" r="40" fill="none" stroke="var(--border-default)" stroke-width="1" stroke-dasharray="2,2" />
+                                    <circle cx="200" cy="200" r="80" fill="none" stroke="var(--border-default)" stroke-width="1" stroke-dasharray="2,2" />
+                                    <circle cx="200" cy="200" r="120" fill="none" stroke="var(--border-default)" stroke-width="1" stroke-dasharray="2,2" />
+                                    <circle cx="200" cy="200" r="160" fill="none" stroke="var(--border-default)" stroke-width="1" />
+                                    
+                                    <!-- Axes -->
+                                    <line x1="200" y1="40" x2="200" y2="360" stroke="var(--border-default)" stroke-width="1" opacity="0.3" />
+                                    <line x1="40" y1="200" x2="360" y2="200" stroke="var(--border-default)" stroke-width="1" opacity="0.3" />
+                                    
+                                    <!-- DNA Area -->
+                                    <polygon id="analyze-radar-poly" points="200,200 200,200 200,200 200,200 200,200" fill="var(--accent-glow)" stroke="var(--accent-primary)" stroke-width="2" style="transition: all 1s var(--spring);" />
+                                </svg>
+                                <!-- Mini Labels -->
+                                <div style="position: absolute; top: 38px; left: 50%; transform: translateX(-50%); font-size: 0.5rem; color: var(--text-tertiary); font-weight: 700;">COMPLEXITY</div>
+                                <div style="position: absolute; top: 40%; right: 28px; font-size: 0.5rem; color: var(--text-tertiary); font-weight: 700;">EMOTION</div>
+                                <div style="position: absolute; bottom: 38px; right: 85px; font-size: 0.5rem; color: var(--text-tertiary); font-weight: 700;">FACTS</div>
+                                <div style="position: absolute; bottom: 38px; left: 85px; font-size: 0.5rem; color: var(--text-tertiary); font-weight: 700;">DIVERSITY</div>
+                                <div style="position: absolute; top: 40%; left: 28px; font-size: 0.5rem; color: var(--text-tertiary); font-weight: 700;">LOGIC</div>
+                            </div>
+
                             <div class="modules-title" style="margin-top: 0; display: flex; justify-content: space-between; align-items: center;">
                                 Related Intelligence
                                 <span style="font-size: 0.6rem; color: var(--accent-primary); letter-spacing: 0;">MATCHING KEYWORDS</span>
                             </div>
-                            <div id="related-news-container" style="display: flex; flex-direction: column; gap: 16px; max-height: calc(100vh - 250px); overflow-y: auto; padding-right: 8px;">
+                            <div id="related-news-container" style="display: flex; flex-direction: column; gap: 16px; max-height: calc(100vh - 540px); overflow-y: auto; padding-right: 8px;">
                                 <div style="padding: 40px 20px; text-align: center; color: var(--text-tertiary); font-size: 0.8rem; border: 1px dashed var(--border-default); border-radius: 12px;">
                                     Waiting for analysis to fetch related intelligence...
                                 </div>
@@ -3081,7 +3106,6 @@
             container.innerHTML = `
                 <div class="glass-card shimmer" style="height: 100px; border-radius: 12px; margin-bottom: 8px;"></div>
                 <div class="glass-card shimmer" style="height: 100px; border-radius: 12px; margin-bottom: 8px;"></div>
-                <div class="glass-card shimmer" style="height: 100px; border-radius: 12px;"></div>
             `;
             
             try {
@@ -3095,7 +3119,7 @@
                 
                 if (data.news && data.news.length > 0) {
                     container.innerHTML = '';
-                    data.news.slice(0, 6).forEach((item, idx) => {
+                    data.news.slice(0, 4).forEach((item, idx) => {
                         const card = document.createElement('div');
                         card.className = 'glass-card';
                         card.style = `padding: 16px; border-radius: 12px; border: 1px solid var(--border-default); animation: cardCascade 0.6s var(--spring) forwards ${idx * 0.1}s; opacity: 0; cursor: pointer;`;
@@ -3117,6 +3141,23 @@
                 console.error("Failed to fetch related news:", e);
                 container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--red); font-size: 0.8rem;">Intelligence sync failed.</div>`;
             }
+        }
+
+        function updateAnalyzeRadar(dna) {
+            const poly = document.getElementById('analyze-radar-poly');
+            if (!poly || !dna) return;
+            
+            const center = 200;
+            const scale = 160;
+            const angles = [0, 72, 144, 216, 288].map(a => (a - 90) * Math.PI / 180);
+            const points = dna.map((val, i) => {
+                const r = Math.max(0.15, val) * scale;
+                const x = center + r * Math.cos(angles[i]);
+                const y = center + r * Math.sin(angles[i]);
+                return `${x},${y}`;
+            }).join(' ');
+            
+            poly.setAttribute('points', points);
         }
 
         async function startAnalysis() {
@@ -3325,7 +3366,18 @@
                 });
             }
 
-            // DNA Stats removed from sidebar
+            // DNA Stats
+            if (data.linguistic_dna) {
+                // Mapped to Radar points: Complexity, Sentiment, Trust, Diversity, Probability
+                const dnaPoints = [
+                    Math.min(1.0, data.linguistic_dna.subjectivity * 0.15),
+                    Math.min(1.0, data.linguistic_dna.emotional_charge * 0.1),
+                    Math.min(1.0, data.linguistic_dna.fact_density * 0.2),
+                    0.65, // Lexical diversity (static placeholder if not in data)
+                    1.0 - data.final_prob
+                ];
+                updateAnalyzeRadar(dnaPoints);
+            }
 
             // Meter
             const arc = document.getElementById('d-fill');
