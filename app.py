@@ -17,6 +17,10 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+def count_parameters(model):
+    """Helper to count trainable parameters in a torch model."""
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
 # Import configuration
 from config import settings
 
