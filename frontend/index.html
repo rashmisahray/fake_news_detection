@@ -541,8 +541,9 @@
         */
         .analyze-layout {
             display: grid;
-            grid-template-columns: 1.5fr 1fr;
+            grid-template-columns: 1.6fr 1fr;
             gap: 32px;
+            align-items: flex-start;
         }
 
         .glass-card {
@@ -764,6 +765,8 @@
             display: flex;
             flex-direction: column;
             gap: 32px;
+            position: sticky;
+            top: 20px;
         }
 
         .stat-group {
@@ -2099,6 +2102,30 @@
                                         <p class="i-finding" id="if-4">--</p>
                                     </div>
                                 </div>
+                                
+                                <!-- Neural Attention Heatmap Section -->
+                                <div id="xai-section" style="margin-bottom: 32px; display: none;">
+                                    <div class="modules-title" style="margin-top: 0; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--accent-primary)" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                        Explainable AI: Neural Attention Heatmap
+                                    </div>
+                                    <div class="glass-card" style="padding: 24px; line-height: 2; border-radius: 16px; background: rgba(10, 12, 18, 0.4);">
+                                        <div id="heatmap-container" style="display: flex; flex-wrap: wrap; gap: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.95rem;">
+                                            <!-- Tokens with background colors will be injected here -->
+                                        </div>
+                                        <div style="margin-top: 24px; display: flex; gap: 20px; align-items: center; border-top: 1px solid var(--border-default); padding-top: 16px;">
+                                            <div style="display: flex; align-items: center; gap: 8px; font-size: 0.65rem; color: var(--text-tertiary); font-weight: 700; text-transform: uppercase;">
+                                                <div style="width: 12px; height: 12px; background: var(--red); border-radius: 3px;"></div> High Suspicion
+                                            </div>
+                                            <div style="display: flex; align-items: center; gap: 8px; font-size: 0.65rem; color: var(--text-tertiary); font-weight: 700; text-transform: uppercase;">
+                                                <div style="width: 12px; height: 12px; background: var(--amber); border-radius: 3px;"></div> Elevated
+                                            </div>
+                                            <div style="display: flex; align-items: center; gap: 8px; font-size: 0.65rem; color: var(--text-tertiary); font-weight: 700; text-transform: uppercase;">
+                                                <div style="width: 12px; height: 12px; background: var(--green-dim); border-radius: 3px; border: 1px solid var(--green-border);"></div> Baseline
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
                                 <div class="report-box">
                                     <div class="report-header">
@@ -2139,6 +2166,10 @@
                                         </svg>
                                         New Analysis
                                     </button>
+                                    <button id="btn-reveal-forensics" class="btn-action ripple-target" onclick="toggleForensics()" style="background: rgba(99, 102, 241, 0.1); border-color: var(--accent-primary); color: var(--accent-primary); display: none;">
+                                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                        Forensic DNA
+                                    </button>
                                     <button class="btn-action ripple-target" onclick="showPage('dashboard')" style="border-color:var(--accent-primary); color:var(--accent-primary);">
                                         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.21 15.89A10 10 0 1 1 8 2.83M22 12A10 10 0 0 0 12 2v10z"/></svg>
                                         View DNA Lab
@@ -2168,36 +2199,56 @@
 
                         <!-- Right Col -->
                         <div class="side-panel">
-                            <!-- DNA Radar Chart (The Intelligence Part) -->
-                            <div class="glass-card" style="padding: 16px; border-radius: 16px; margin-bottom: 20px; position: relative; height: 260px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid var(--border-default);">
-                                <div style="position: absolute; top: 12px; left: 16px; font-size: 0.65rem; font-weight: 800; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.05em;">Neural DNA Profile</div>
-                                <svg id="analyze-radar-svg" viewBox="0 0 400 400" style="width: 220px; height: 220px; transform: rotate(-18deg);">
-                                    <!-- Grid Lines -->
-                                    <circle cx="200" cy="200" r="40" fill="none" stroke="var(--border-default)" stroke-width="1" stroke-dasharray="2,2" />
-                                    <circle cx="200" cy="200" r="80" fill="none" stroke="var(--border-default)" stroke-width="1" stroke-dasharray="2,2" />
-                                    <circle cx="200" cy="200" r="120" fill="none" stroke="var(--border-default)" stroke-width="1" stroke-dasharray="2,2" />
-                                    <circle cx="200" cy="200" r="160" fill="none" stroke="var(--border-default)" stroke-width="1" />
+                            <!-- Live DNA Profile Section -->
+                            <div class="glass-card" style="padding: 24px; margin-bottom: 0; position: relative; overflow: hidden; background: rgba(10, 12, 18, 0.6);">
+                                <div class="modules-title" style="margin-top: 0; display: flex; justify-content: space-between; align-items: center;">
+                                    Linguistic DNA Profile
+                                    <span id="dna-status-tag" style="font-size: 0.6rem; color: var(--accent-primary); letter-spacing: 0;">LIVE PREVIEW</span>
+                                </div>
+                                
+                                <div style="height: 240px; display: flex; align-items: center; justify-content: center; position: relative; margin: 10px 0;">
+                                    <svg id="analyze-radar-svg" viewBox="0 0 400 400" style="width: 100%; height: 100%; filter: drop-shadow(0 0 10px var(--accent-glow));">
+                                        <!-- Grid -->
+                                        <circle class="radar-grid" cx="200" cy="200" r="40" />
+                                        <circle class="radar-grid" cx="200" cy="200" r="80" />
+                                        <circle class="radar-grid" cx="200" cy="200" r="120" />
+                                        <circle class="radar-grid" cx="200" cy="200" r="160" />
+                                        
+                                        <!-- Axes -->
+                                        <line class="radar-axis" x1="200" y1="40" x2="200" y2="360" />
+                                        <line class="radar-axis" x1="40" y1="200" x2="360" y2="200" />
+                                        <line class="radar-axis" x1="87" y1="87" x2="313" y2="313" />
+                                        <line class="radar-axis" x1="87" y1="313" x2="313" y2="87" />
+        
+                                        <!-- DNA Area -->
+                                        <polygon id="analyze-radar-poly" class="radar-area" points="200,140 240,170 230,240 170,240 160,170" />
+                                    </svg>
                                     
-                                    <!-- Axes -->
-                                    <line x1="200" y1="40" x2="200" y2="360" stroke="var(--border-default)" stroke-width="1" opacity="0.3" />
-                                    <line x1="40" y1="200" x2="360" y2="200" stroke="var(--border-default)" stroke-width="1" opacity="0.3" />
-                                    
-                                    <!-- DNA Area -->
-                                    <polygon id="analyze-radar-poly" points="200,200 200,200 200,200 200,200 200,200" fill="var(--accent-glow)" stroke="var(--accent-primary)" stroke-width="2" style="transition: all 1s var(--spring);" />
-                                </svg>
-                                <!-- Mini Labels -->
-                                <div style="position: absolute; top: 38px; left: 50%; transform: translateX(-50%); font-size: 0.5rem; color: var(--text-tertiary); font-weight: 700;">COMPLEXITY</div>
-                                <div style="position: absolute; top: 40%; right: 28px; font-size: 0.5rem; color: var(--text-tertiary); font-weight: 700;">EMOTION</div>
-                                <div style="position: absolute; bottom: 38px; right: 85px; font-size: 0.5rem; color: var(--text-tertiary); font-weight: 700;">FACTS</div>
-                                <div style="position: absolute; bottom: 38px; left: 85px; font-size: 0.5rem; color: var(--text-tertiary); font-weight: 700;">DIVERSITY</div>
-                                <div style="position: absolute; top: 40%; left: 28px; font-size: 0.5rem; color: var(--text-tertiary); font-weight: 700;">LOGIC</div>
+                                    <!-- Mini Labels -->
+                                    <div class="dna-label" style="top:0; left:50%; transform:translateX(-50%); font-size: 0.55rem;">Complexity</div>
+                                    <div class="dna-label" style="top:25%; right:0; font-size: 0.55rem;">Emotion</div>
+                                    <div class="dna-label" style="bottom:5%; right:15%; font-size: 0.55rem;">Fact Density</div>
+                                    <div class="dna-label" style="bottom:5%; left:15%; font-size: 0.55rem;">Diversity</div>
+                                    <div class="dna-label" style="top:25%; left:0; font-size: 0.55rem;">Logic</div>
+                                </div>
+                                
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px;">
+                                    <div style="background: var(--bg-surface); padding: 8px; border-radius: 8px; border: 1px solid var(--border-default);">
+                                        <div style="font-size: 0.6rem; color: var(--text-tertiary); text-transform: uppercase;">Sentiment</div>
+                                        <div id="live-sentiment-val" style="font-size: 0.9rem; font-weight: 700; color: var(--accent-primary);">Neutral</div>
+                                    </div>
+                                    <div style="background: var(--bg-surface); padding: 8px; border-radius: 8px; border: 1px solid var(--border-default);">
+                                        <div style="font-size: 0.6rem; color: var(--text-tertiary); text-transform: uppercase;">Confidence</div>
+                                        <div id="live-confidence-val" style="font-size: 0.9rem; font-weight: 700; color: var(--accent-secondary);">ESTIMATING</div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div class="modules-title" style="margin-top: 0; display: flex; justify-content: space-between; align-items: center;">
+                            <div class="modules-title" style="margin-top: 32px; display: flex; justify-content: space-between; align-items: center;">
                                 Related Intelligence
                                 <span style="font-size: 0.6rem; color: var(--accent-primary); letter-spacing: 0;">MATCHING KEYWORDS</span>
                             </div>
-                            <div id="related-news-container" style="display: flex; flex-direction: column; gap: 16px; max-height: calc(100vh - 540px); overflow-y: auto; padding-right: 8px;">
+                            <div id="related-news-container" style="display: flex; flex-direction: column; gap: 16px; max-height: calc(100vh - 250px); overflow-y: auto; padding-right: 8px;">
                                 <div style="padding: 40px 20px; text-align: center; color: var(--text-tertiary); font-size: 0.8rem; border: 1px dashed var(--border-default); border-radius: 12px;">
                                     Waiting for analysis to fetch related intelligence...
                                 </div>
@@ -3106,6 +3157,7 @@
             container.innerHTML = `
                 <div class="glass-card shimmer" style="height: 100px; border-radius: 12px; margin-bottom: 8px;"></div>
                 <div class="glass-card shimmer" style="height: 100px; border-radius: 12px; margin-bottom: 8px;"></div>
+                <div class="glass-card shimmer" style="height: 100px; border-radius: 12px;"></div>
             `;
             
             try {
@@ -3119,7 +3171,7 @@
                 
                 if (data.news && data.news.length > 0) {
                     container.innerHTML = '';
-                    data.news.slice(0, 4).forEach((item, idx) => {
+                    data.news.slice(0, 6).forEach((item, idx) => {
                         const card = document.createElement('div');
                         card.className = 'glass-card';
                         card.style = `padding: 16px; border-radius: 12px; border: 1px solid var(--border-default); animation: cardCascade 0.6s var(--spring) forwards ${idx * 0.1}s; opacity: 0; cursor: pointer;`;
@@ -3141,23 +3193,6 @@
                 console.error("Failed to fetch related news:", e);
                 container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--red); font-size: 0.8rem;">Intelligence sync failed.</div>`;
             }
-        }
-
-        function updateAnalyzeRadar(dna) {
-            const poly = document.getElementById('analyze-radar-poly');
-            if (!poly || !dna) return;
-            
-            const center = 200;
-            const scale = 160;
-            const angles = [0, 72, 144, 216, 288].map(a => (a - 90) * Math.PI / 180);
-            const points = dna.map((val, i) => {
-                const r = Math.max(0.15, val) * scale;
-                const x = center + r * Math.cos(angles[i]);
-                const y = center + r * Math.sin(angles[i]);
-                return `${x},${y}`;
-            }).join(' ');
-            
-            poly.setAttribute('points', points);
         }
 
         async function startAnalysis() {
@@ -3285,6 +3320,56 @@
                 setTimeout(() => card.classList.add('reveal'), i * 80);
             });
 
+            // Mock Heatmap for Simulation
+            const xaiSection = document.getElementById('xai-section');
+            const heatmapContainer = document.getElementById('heatmap-container');
+            const btnForensics = document.getElementById('btn-reveal-forensics');
+            
+            if (xaiSection && heatmapContainer) {
+                if (btnForensics) btnForensics.style.display = 'flex';
+                heatmapContainer.innerHTML = '';
+                const mockTokens = text.trim().split(/\s+/).slice(0, 40);
+                mockTokens.forEach((token, idx) => {
+                    const span = document.createElement('span');
+                    span.textContent = token;
+                    span.style.padding = '2px 8px';
+                    span.style.borderRadius = '4px';
+                    span.style.padding = '4px 8px';
+                    span.style.margin = '2px';
+                    span.style.borderRadius = '6px';
+                    span.style.transition = 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+                    span.style.opacity = '0';
+                    span.style.transform = 'translateY(12px)';
+                    span.style.display = 'inline-block';
+                    span.style.fontSize = '0.85rem';
+                    
+                    // Randomly highlight words in fake mode, fewer in real mode
+                    const isFake = profile === PROFILES.fake;
+                    const rand = Math.random();
+                    if (isFake && rand > 0.9) {
+                        span.style.background = 'rgba(255, 75, 107, 0.85)';
+                        span.style.color = 'white';
+                        span.style.boxShadow = '0 4px 15px rgba(255, 75, 107, 0.25)';
+                        span.style.fontWeight = '700';
+                    } else if (isFake && rand > 0.7) {
+                        span.style.background = 'rgba(245, 158, 11, 0.7)';
+                        span.style.color = 'white';
+                    } else if (rand > 0.4) {
+                        span.style.background = 'rgba(99, 102, 241, 0.1)';
+                        span.style.color = 'var(--text-secondary)';
+                    } else {
+                        span.style.color = 'var(--text-secondary)';
+                        span.style.opacity = '0.7';
+                    }
+
+                    heatmapContainer.appendChild(span);
+                    setTimeout(() => {
+                        span.style.opacity = '1';
+                        span.style.transform = 'translateY(0)';
+                    }, 500 + (idx * 20));
+                });
+            }
+
             // Report Typewriter
             const rTarget = document.getElementById('report-text');
             rTarget.innerHTML = '';
@@ -3366,18 +3451,7 @@
                 });
             }
 
-            // DNA Stats
-            if (data.linguistic_dna) {
-                // Mapped to Radar points: Complexity, Sentiment, Trust, Diversity, Probability
-                const dnaPoints = [
-                    Math.min(1.0, data.linguistic_dna.subjectivity * 0.15),
-                    Math.min(1.0, data.linguistic_dna.emotional_charge * 0.1),
-                    Math.min(1.0, data.linguistic_dna.fact_density * 0.2),
-                    0.65, // Lexical diversity (static placeholder if not in data)
-                    1.0 - data.final_prob
-                ];
-                updateAnalyzeRadar(dnaPoints);
-            }
+            // DNA Stats removed from sidebar
 
             // Meter
             const arc = document.getElementById('d-fill');
@@ -3418,6 +3492,74 @@
                 document.getElementById(`ib-${i + 1}`).style.background = sigColor;
                 setTimeout(() => card.classList.add('reveal'), i * 80);
             });
+
+            // Prepare Neural Attention Heatmap (but keep hidden)
+            const xaiSection = document.getElementById('xai-section');
+            const heatmapContainer = document.getElementById('heatmap-container');
+            const btnForensics = document.getElementById('btn-reveal-forensics');
+            
+            if (xaiSection && heatmapContainer && data.tokens && data.attention_weights) {
+                if (btnForensics) btnForensics.style.display = 'flex';
+                heatmapContainer.innerHTML = '';
+                
+                // Find max and min weight for better scaling
+                const weights = data.attention_weights;
+                const maxWeight = Math.max(...weights);
+                const minWeight = Math.min(...weights);
+                const range = maxWeight - minWeight;
+                
+                // If all weights are identical (flat), show as neutral baseline
+                const isFlat = range < 0.0001;
+                
+                data.tokens.forEach((token, idx) => {
+                    const weight = weights[idx] || 0;
+                    // Scale weight between 0 and 1 based on the range in this specific text
+                    const normalizedWeight = isFlat ? 0 : (weight - minWeight) / range;
+                    
+                    const span = document.createElement('span');
+                    span.textContent = token;
+                    span.style.padding = '4px 8px';
+                    span.style.margin = '2px';
+                    span.style.borderRadius = '6px';
+                    span.style.transition = 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+                    span.style.opacity = '0';
+                    span.style.transform = 'translateY(12px)';
+                    span.style.display = 'inline-block';
+                    span.style.fontSize = '0.85rem';
+                    span.style.letterSpacing = '0.02em';
+                    
+                    // Premium Forensic Color Mapping
+                    if (!isFlat && normalizedWeight > 0.85) {
+                        // CRITICAL - Deep Red with subtle Glow
+                        span.style.background = 'rgba(255, 75, 107, 0.85)';
+                        span.style.color = 'white';
+                        span.style.boxShadow = '0 4px 15px rgba(255, 75, 107, 0.25)';
+                        span.style.fontWeight = '700';
+                        span.style.transform = 'translateY(12px) scale(1.05)';
+                    } else if (!isFlat && normalizedWeight > 0.6) {
+                        // ELEVATED - Amber/Gold
+                        span.style.background = 'rgba(245, 158, 11, 0.7)';
+                        span.style.color = 'white';
+                    } else if (!isFlat && normalizedWeight > 0.3) {
+                        // LOW RISK - Subtle Indigo Tint
+                        span.style.background = 'rgba(99, 102, 241, 0.1)';
+                        span.style.border = '1px solid rgba(99, 102, 241, 0.2)';
+                        span.style.color = 'var(--text-secondary)';
+                    } else {
+                        // NEUTRAL/CONTEXT - Normal text color
+                        span.style.color = 'var(--text-secondary)';
+                        span.style.opacity = '0.7';
+                    }
+                    
+                    heatmapContainer.appendChild(span);
+                    
+                    // Smooth staggered animation
+                    setTimeout(() => {
+                        span.style.opacity = '1';
+                        span.style.transform = 'translateY(0)';
+                    }, 400 + (idx * 15));
+                });
+            }
 
             // Report Text
             const report = profile === PROFILES.unverified ?
@@ -3501,6 +3643,22 @@
                 tBox.appendChild(el);
             });
 
+            // Sync both Radar Charts
+            updateRadarChart('analyze-radar-poly', [
+                data.meta.heuristic_score, // Complexity estimation
+                data.final_prob, // Emotion/Risk
+                data.heuristics.trust_markers / 10, // Fact Density
+                (data.bert_prob + data.bilstm_prob) / 2, // Diversity/Consistency
+                1 - data.final_prob // Logic/Integrity
+            ]);
+            
+            // Mark as verified
+            const statusTag = document.getElementById('dna-status-tag');
+            if (statusTag) {
+                statusTag.textContent = 'VERIFIED DNA';
+                statusTag.style.color = 'var(--green)';
+            }
+
             // FORCE SYNC (No auto-navigate as per user request)
             fetchMetrics().then(() => {
                 showNeuralToast();
@@ -3578,11 +3736,38 @@ CONFIDENTIAL INTEL DATA
             if (mainBriefing) mainBriefing.style.display = 'none';
             const fcSection = document.getElementById('factcheck-section');
             if (fcSection) fcSection.style.display = 'none';
+            const xaiSection = document.getElementById('xai-section');
+            if (xaiSection) xaiSection.style.display = 'none';
+            
+            const btnForensics = document.getElementById('btn-reveal-forensics');
+            if (btnForensics) {
+                btnForensics.style.display = 'none';
+                btnForensics.textContent = 'Forensic DNA';
+            }
             
             document.getElementById('input-card').style.display = 'block';
             document.getElementById('main-text').value = '';
             document.querySelectorAll('.p-node').forEach(n => n.classList.remove('active', 'complete'));
             document.querySelectorAll('.intel-card, .verdict-hero').forEach(el => el.classList.remove('reveal'));
+        }
+
+        function toggleForensics() {
+            const xaiSection = document.getElementById('xai-section');
+            const btn = document.getElementById('btn-reveal-forensics');
+            if (!xaiSection || !btn) return;
+            
+            if (xaiSection.style.display === 'none') {
+                xaiSection.style.display = 'block';
+                btn.textContent = 'Hide Forensics';
+                btn.style.background = 'var(--accent-primary)';
+                btn.style.color = 'white';
+                xaiSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                xaiSection.style.display = 'none';
+                btn.textContent = 'Forensic DNA';
+                btn.style.background = 'rgba(99, 102, 241, 0.1)';
+                btn.style.color = 'var(--accent-primary)';
+            }
         }
 
         /* 
@@ -3687,30 +3872,7 @@ CONFIDENTIAL INTEL DATA
 
                 // Update Neural Lab Radar
                 const dna = data.latest.dna; 
-                const poly = document.getElementById('lab-radar-poly');
-                if (poly && dna) {
-                    const center = 200;
-                    const scale = 160;
-                    const angles = [0, 72, 144, 216, 288].map(a => (a - 90) * Math.PI / 180);
-                    const points = dna.map((val, i) => {
-                        // Ensure minimum visibility even for low scores
-                        const r = Math.max(0.15, val) * scale;
-                        const x = center + r * Math.cos(angles[i]);
-                        const y = center + r * Math.sin(angles[i]);
-                        return `${x},${y}`;
-                    }).join(' ');
-                    
-                    const oldPoints = poly.getAttribute('points');
-                    if (oldPoints !== points) {
-                        poly.setAttribute('points', points);
-                        // Force full re-render
-                        poly.style.display = 'none';
-                        void poly.offsetHeight; 
-                        poly.style.display = 'block';
-                        poly.classList.add('pulse');
-                        setTimeout(() => poly.classList.remove('pulse'), 2000);
-                    }
-                }
+                updateRadarChart('lab-radar-poly', dna);
 
                 updateEl('lab-verdict-label', data.latest.label);
                 const verdictEl = document.getElementById('lab-verdict-label');
@@ -3762,6 +3924,92 @@ CONFIDENTIAL INTEL DATA
 
             } catch (e) {
                 console.warn("Failed to fetch metrics", e);
+            }
+        }
+
+        function updateRadarChart(polyId, dnaData) {
+            const poly = document.getElementById(polyId);
+            if (!poly || !dnaData) return;
+            
+            const center = 200;
+            const scale = 160;
+            const angles = [0, 72, 144, 216, 288].map(a => (a - 90) * Math.PI / 180);
+            
+            const points = dnaData.map((val, i) => {
+                const r = Math.max(0.1, val) * scale;
+                const x = center + r * Math.cos(angles[i]);
+                const y = center + r * Math.sin(angles[i]);
+                return `${x},${y}`;
+            }).join(' ');
+            
+            if (poly.getAttribute('points') !== points) {
+                poly.setAttribute('points', points);
+                poly.classList.add('pulse');
+                setTimeout(() => poly.classList.remove('pulse'), 1000);
+            }
+        }
+
+        function updateLiveDNA() {
+            const text = document.getElementById('main-text').value;
+            if (text.length < 5) return;
+
+            // Simple Client-Side Heuristics
+            const words = text.trim().split(/\s+/);
+            const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+            
+            // 1. Complexity (Sentence length + word length)
+            const avgWordLen = words.reduce((acc, w) => acc + w.length, 0) / words.length;
+            const complexity = Math.min(1, (avgWordLen / 7) * 0.7 + (sentences.length / 20) * 0.3);
+            
+            // 2. Emotion (Urgency markers + punctuation)
+            const emotionalWords = ['urgent', 'shocking', 'exposed', 'truth', 'shocker', 'wow', 'never', 'always', 'everyone'];
+            const emotionalCount = words.filter(w => emotionalWords.includes(w.toLowerCase())).length;
+            const puncCount = (text.match(/[!?]/g) || []).length;
+            const emotion = Math.min(1, (emotionalCount / words.length) * 10 + (puncCount / text.length) * 50);
+            
+            // 3. Fact Density (Capitalized words + Numbers)
+            const properNouns = words.filter(w => w.length > 1 && w[0] === w[0].toUpperCase() && !/^[.!?]/.test(w)).length;
+            const numbers = (text.match(/\d+/g) || []).length;
+            const facts = Math.min(1, (properNouns / words.length) * 3 + (numbers / words.length) * 5);
+            
+            // 4. Diversity (Unique words)
+            const uniqueWords = new Set(words.map(w => w.toLowerCase())).size;
+            const diversity = Math.min(1, uniqueWords / words.length);
+            
+            // 5. Logic (Connective words)
+            const logicWords = ['because', 'therefore', 'however', 'consequently', 'since', 'moreover', 'thus'];
+            const logicCount = words.filter(w => logicWords.includes(w.toLowerCase())).length;
+            const logic = Math.min(1, (logicCount / words.length) * 15 + 0.2);
+
+            const liveDNA = [complexity, emotion, facts, diversity, logic];
+            updateRadarChart('analyze-radar-poly', liveDNA);
+            
+            // Update UI Labels
+            const sentimentVal = document.getElementById('live-sentiment-val');
+            if (sentimentVal) {
+                if (emotion > 0.6) {
+                    sentimentVal.textContent = 'HIGHLY EMOTIONAL';
+                    sentimentVal.style.color = 'var(--red)';
+                } else if (emotion > 0.3) {
+                    sentimentVal.textContent = 'SUBJECTIVE';
+                    sentimentVal.style.color = 'var(--amber)';
+                } else {
+                    sentimentVal.textContent = 'OBJECTIVE';
+                    sentimentVal.style.color = 'var(--green)';
+                }
+            }
+            
+            const confidenceVal = document.getElementById('live-confidence-val');
+            if (confidenceVal) {
+                const conf = Math.floor(Math.min(95, 20 + (text.length / 10)));
+                confidenceVal.textContent = conf + '% ANALYZED';
+            }
+            
+            // Reset status if it was verified
+            const statusTag = document.getElementById('dna-status-tag');
+            if (statusTag && statusTag.textContent === 'VERIFIED DNA') {
+                statusTag.textContent = 'LIVE PREVIEW';
+                statusTag.style.color = 'var(--accent-primary)';
             }
         }
         
@@ -3891,6 +4139,12 @@ CONFIDENTIAL INTEL DATA
             initClock();
             initCounters();
             initFeed();
+
+            // Link Analysis to DNA Profile
+            const textArea = document.getElementById('main-text');
+            if (textArea) {
+                textArea.addEventListener('input', updateLiveDNA);
+            }
         });
 
     </script>
