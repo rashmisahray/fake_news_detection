@@ -1,5 +1,9 @@
 # TruthLens AI - Advanced Fake News Detection System
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Render-brightgreen?style=for-the-badge&logo=render)](https://fake-news-detection-w7kw.onrender.com)
+
+🌐 **Live Demo Application**: [https://fake-news-detection-w7kw.onrender.com](https://fake-news-detection-w7kw.onrender.com)
+
 TruthLens AI is a high-fidelity, production-grade fake news detection platform. It leverages a state-of-the-art hybrid ensemble architecture combining Transformer models with Recurrent Neural Networks and classical linguistic analysis to provide explainable and highly accurate credibility assessments.
 
 ## 🚀 Key Features
