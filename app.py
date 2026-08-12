@@ -5,6 +5,7 @@ import time
 import pickle
 import numpy as np
 import torch
+torch.set_num_threads(1)
 import torch.nn as nn
 import torch.nn.functional as F
 import nltk
